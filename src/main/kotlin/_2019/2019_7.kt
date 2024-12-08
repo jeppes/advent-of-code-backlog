@@ -11,11 +11,7 @@ private fun runAmplifiers1(
     input: List<Int>
 ): Int {
     require(input.size == 5)
-    val a = input[0]
-    val b = input[1]
-    val c = input[2]
-    val d = input[3]
-    val e = input[4]
+    val (a, b, c, d, e) = input
 
     val outputA = intcode.run(state, input = listOf(a, 0)).output
     require(outputA.size == 1)
@@ -52,11 +48,7 @@ private fun runAmplifiers2(
     input: List<Int>
 ): Int {
     require(input.size == 5)
-    val a = input[0]
-    val b = input[1]
-    val c = input[2]
-    val d = input[3]
-    val e = input[4]
+    val (a, b, c, d, e) = input
 
     val startState = IntcodeState.fromRegisters(registersString)
 
