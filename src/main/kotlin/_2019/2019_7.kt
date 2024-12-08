@@ -1,11 +1,14 @@
 package org.example._2019
 
+import Continuation
 import Intcode
+import IntcodeState
+import org.example.printTestSummary
 import org.example.readFile
 import org.example.test
 import permutations
 
-private fun runAmplifiers(
+private fun runAmplifiers1(
     intcode: Intcode,
     state: String,
     input: List<Int>
@@ -36,7 +39,7 @@ private fun part1(intcode: Intcode, state: String): Int {
     var result = Int.MIN_VALUE
 
     setOf(0, 1, 2, 3, 4).permutations().forEach { input ->
-        val newResult = runAmplifiers(intcode, state, input = input)
+        val newResult = runAmplifiers1(intcode, state, input = input)
         if (newResult > result) {
             result = newResult
         }
@@ -45,11 +48,66 @@ private fun part1(intcode: Intcode, state: String): Int {
     return result
 }
 
+
+private fun runAmplifiers2(
+    intcode: Intcode,
+    registersString: String,
+    input: List<Int>
+): Int {
+    require(input.size == 5)
+    val a = input[0]
+    val b = input[1]
+    val c = input[2]
+    val d = input[3]
+    val e = input[4]
+
+    val startState = IntcodeState.fromRegisters(registersString)
+
+    var continuationA = intcode.step(state = startState, input = a)
+    require(continuationA is Continuation.NeedInput)
+    continuationA = continuationA.next(0)
+
+    var continuationB = intcode.step(state = startState, input = b)
+    require(continuationB is Continuation.NeedInput)
+    continuationB = continuationB.next(continuationA.state.output.last())
+
+    var continuationC = intcode.step(state = startState, input = c)
+    require(continuationC is Continuation.NeedInput)
+    continuationC = continuationC.next(continuationB.state.output.last())
+
+    var continuationD = intcode.step(state = startState, input = d)
+    require(continuationD is Continuation.NeedInput)
+    continuationD = continuationD.next(continuationC.state.output.last())
+
+    var continuationE = intcode.step(state = startState, input = e)
+    require(continuationE is Continuation.NeedInput)
+    continuationE = continuationE.next(continuationD.state.output.last())
+
+    while (continuationE !is Continuation.Halt) {
+        require(continuationA is Continuation.NeedInput)
+        continuationA = continuationA.next(continuationE.state.output.last())
+
+        require(continuationB is Continuation.NeedInput)
+        continuationB = continuationB.next(continuationA.state.output.last())
+
+        require(continuationC is Continuation.NeedInput)
+        continuationC = continuationC.next(continuationB.state.output.last())
+
+        require(continuationD is Continuation.NeedInput)
+        continuationD = continuationD.next(continuationC.state.output.last())
+
+        require(continuationE is Continuation.NeedInput)
+        continuationE = continuationE.next(continuationD.state.output.last())
+    }
+
+    return continuationE.state.output.last()
+}
+
 private fun part2(intcode: Intcode, state: String): Int {
     var result = Int.MIN_VALUE
 
-    setOf(0, 1, 2, 3, 4).permutations().forEach { input ->
-        val newResult = runAmplifiers(intcode, state, input = input)
+    setOf(5, 6, 7, 8, 9).permutations().forEach { input ->
+        val newResult = runAmplifiers2(intcode, state, input = input)
         if (newResult > result) {
             result = newResult
         }
@@ -99,21 +157,40 @@ fun day7Tests(intcode: Intcode) {
         expected = 11828
     )
 
-//    test(
-//        "Max thruster signal 139629729",
-//        {
-//            part2(
-//                intcode = intcode,
-//                state = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5",
-//            )
-//        },
-//        expected = 139629729
-//    )
+    test(
+        "Max thruster signal 139629729",
+        {
+            part2(
+                intcode = intcode,
+                state = "3,26,1001,26,-4,26,3,27,1002,27,2,27,1,27,26,27,4,27,1001,28,-1,28,1005,28,6,99,0,0,5",
+            )
+        },
+        expected = 139629729
+    )
 
+    test(
+        "Max thruster signal 18216",
+        {
+            part2(
+                intcode = intcode,
+                state = "3,52,1001,52,-5,52,3,53,1,52,56,54,1007,54,5,55,1005,55,26,1001,54," +
+                        "-5,54,1105,1,12,1,53,54,53,1008,54,0,55,1001,55,1,55,2,53,55,53,4," +
+                        "53,1001,56,-1,56,1005,56,6,99,0,0,0,0,10",
+            )
+        },
+        expected = 18216
+    )
+
+    test(
+        "Part 2",
+        { part2(intcode = intcode, state = readFile("/2019_7.txt")) },
+        expected = 1714298
+    )
 }
 
 fun main() {
     day2Tests(day5Intcode)
     day5Tests(day5Intcode)
     day7Tests(day5Intcode)
+    printTestSummary()
 }

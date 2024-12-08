@@ -1,7 +1,8 @@
 package org.example._2019
 
+import Continuation
 import Intcode
-import IntcodeResult
+import IntcodeState
 import org.example._2019.Instruction.*
 import org.example.printTestSummary
 import org.example.readFile
@@ -151,82 +152,85 @@ private fun interpretParameter(state: List<Int>, mode: Mode, parameter: Int): In
 
 
 val day5Intcode = object : Intcode {
-    override fun run(startState: List<Int>, input: List<Int>): IntcodeResult {
-        val mutableInput = input.toMutableList()
-        val state = startState.toMutableList()
-        var instructionsExecuted = 0
-        val output = mutableListOf<Int>()
-        var instructionPointer = 0
-        var previousInstructionPointer: Int? = null
-        var latestInstruction: Instruction? = null
+    override fun step(
+        state: IntcodeState,
+        input: Int?
+    ): Continuation {
+        var mutableInput = input
+        val mutableRegisters = state.registers.toMutableList()
+        val output = state.output.toMutableList()
+        var instructionPointer = state.instructionPointer
 
         try {
             while (true) {
-                require(previousInstructionPointer != instructionPointer) {
-                    "Instruction pointer should change"
-                }
-                previousInstructionPointer = instructionPointer
-
-                require(instructionsExecuted < 10_000_000) {
-                    "Runtime exceeded"
-                }
-                instructionsExecuted++
-
-                require(state.any { it == 99 }) {
+                require(mutableRegisters.any { it == 99 }) {
                     "HALT instruction overwritten"
                 }
 
                 val instruction =
-                    parseInstruction(state[instructionPointer])
-                latestInstruction = instruction
+                    parseInstruction(mutableRegisters[instructionPointer])
 
                 when (instruction) {
                     is Addition -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val parameter3 = state[instructionPointer + 3]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val parameter3 = mutableRegisters[instructionPointer + 3]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
-                        state[parameter3] = value1 + value2
+                        mutableRegisters[parameter3] = value1 + value2
 
 
                         instructionPointer += 4
                     }
 
                     is Multiplication -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val parameter3 = state[instructionPointer + 3]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val parameter3 = mutableRegisters[instructionPointer + 3]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
-                        state[parameter3] = value1 * value2
+                        mutableRegisters[parameter3] = value1 * value2
 
                         instructionPointer += 4
                     }
 
                     ReadInput -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        require(mutableInput.isNotEmpty())
-                        state[parameter1] = mutableInput.removeFirst()
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        if (mutableInput == null) {
+                            val nextState = IntcodeState(
+                                instructionPointer = instructionPointer,
+                                registers = mutableRegisters,
+                                output = output,
+                            )
 
-                        instructionPointer += 2
+                            return Continuation.NeedInput(
+                                next = { nextInput ->
+                                    step(state = nextState, input = nextInput)
+                                },
+                                state = nextState
+                            )
+                        } else {
+                            mutableRegisters[parameter1] = mutableInput
+                            mutableInput = null
+                            instructionPointer += 2
+                        }
                     }
 
                     is WriteOutput -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val value = interpretParameter(state, instruction.mode1, parameter1)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val value = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
                         output += value
 
                         instructionPointer += 2
                     }
 
                     is JumpIfTrue -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
 
                         if (value1 != 0) {
@@ -237,10 +241,10 @@ val day5Intcode = object : Intcode {
                     }
 
                     is JumpIfFalse -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
                         if (value1 == 0) {
                             instructionPointer = value2
@@ -250,51 +254,55 @@ val day5Intcode = object : Intcode {
                     }
 
                     is LessThan -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val toPosition = state[instructionPointer + 3]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val toPosition = mutableRegisters[instructionPointer + 3]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
                         if (value1 < value2) {
-                            state[toPosition] = 1
+                            mutableRegisters[toPosition] = 1
                         } else {
-                            state[toPosition] = 0
+                            mutableRegisters[toPosition] = 0
                         }
                         instructionPointer += 4
                     }
 
                     is Equals -> {
-                        val parameter1 = state[instructionPointer + 1]
-                        val parameter2 = state[instructionPointer + 2]
-                        val toPosition = state[instructionPointer + 3]
-                        val value1 = interpretParameter(state, instruction.mode1, parameter1)
-                        val value2 = interpretParameter(state, instruction.mode2, parameter2)
+                        val parameter1 = mutableRegisters[instructionPointer + 1]
+                        val parameter2 = mutableRegisters[instructionPointer + 2]
+                        val toPosition = mutableRegisters[instructionPointer + 3]
+                        val value1 = interpretParameter(mutableRegisters, instruction.mode1, parameter1)
+                        val value2 = interpretParameter(mutableRegisters, instruction.mode2, parameter2)
 
                         if (value1 == value2) {
-                            state[toPosition] = 1
+                            mutableRegisters[toPosition] = 1
                         } else {
-                            state[toPosition] = 0
+                            mutableRegisters[toPosition] = 0
                         }
                         instructionPointer += 4
                     }
 
                     Halt -> {
-                        return IntcodeResult(state = state, output = output)
+                        val nextState = IntcodeState(
+                            instructionPointer = instructionPointer,
+                            registers = mutableRegisters,
+                            output = output,
+                        )
+
+                        return Continuation.Halt(state = nextState)
                     }
                 }
             }
         } catch (e: Exception) {
             println("\uD83D\uDCA5\uD83D\uDCA5\uD83D\uDCA5")
-            println("Crash state: $state")
-            println("Start state: $startState")
+            println("Crash registers: $mutableRegisters")
+            println("Start registers: ${state.registers}")
             println("Input: $input")
+            println("Mutable input: $input")
             println("Output: $output")
-            println("Instructions executed: $instructionsExecuted")
             println("Instruction pointer: $instructionPointer")
-            println("Latest instruction: $latestInstruction")
-            println("All input: $input")
-            println("Remaining input: $mutableInput")
+            println("Input: $input")
             throw e
         }
     }
