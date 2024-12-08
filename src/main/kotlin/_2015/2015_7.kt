@@ -15,7 +15,6 @@ private fun <V> Map<String, V>.getOrThrow(key: String): V {
 private fun part1(input: String): Int {
     val result = mutableMapOf<String, UShort>()
     val lines = input.lines().toMutableList()
-    val failedLines = mutableListOf<String>()
 
     while (lines.isNotEmpty()) {
         val line = lines.removeFirst()
@@ -63,13 +62,7 @@ private fun part1(input: String): Int {
                 result[right] = a
             }
         } catch (e: KeyNotFoundException) {
-            // laziest solution to avoid building a big graph
-            failedLines += line
-        }
-
-        if (lines.isEmpty() && failedLines.isNotEmpty()) {
-            lines.addAll(failedLines)
-            failedLines.clear()
+            lines += line
         }
     }
 
