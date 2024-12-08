@@ -10,12 +10,12 @@ fun parseIntcodeState(input: String): List<Int> {
 interface Intcode {
     fun run(
         startState: List<Int>,
-        input: Int?
+        input: List<Int>
     ): IntcodeResult
 
     fun run(
         startString: String,
-        input: Int?
+        input: List<Int>
     ): IntcodeResult {
         return run(parseIntcodeState(startString), input = input)
     }

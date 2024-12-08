@@ -6,7 +6,7 @@ import org.example.*
 import parseIntcodeState
 
 private val day2Intcode = object : Intcode {
-    override fun run(startState: List<Int>, input: Int?): IntcodeResult {
+    override fun run(startState: List<Int>, input: List<Int>): IntcodeResult {
         val state = startState.toMutableList()
 
         var instructionPointer = 0
@@ -41,7 +41,7 @@ private fun part1(input: String, noun: Int = 12, verb: Int = 2): Int {
     state[1] = noun
     state[2] = verb
 
-    return day2Intcode.run(state, input = null).state[0]
+    return day2Intcode.run(state, input = emptyList()).state[0]
 }
 
 private fun part2(input: String): Int {
@@ -67,7 +67,7 @@ fun day2Tests(
 
         test(
             "Day 2 Part 1",
-            { intcode.run(startState = state, input = null).state[0] },
+            { intcode.run(startState = state, input = emptyList()).state[0] },
             expected = 6730673
         )
     }
@@ -81,7 +81,7 @@ fun day2Tests(
 
         test(
             "Day 2 Part 2",
-            { intcode.run(startState = state, input = null).state[0] },
+            { intcode.run(startState = state, input = emptyList()).state[0] },
             expected = 19690720
         )
     }
