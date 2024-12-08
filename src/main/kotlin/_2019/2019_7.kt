@@ -1,12 +1,9 @@
-package org.example._2019
+package _2019
 
-import Continuation
-import Intcode
-import IntcodeState
-import org.example.printTestSummary
-import org.example.readFile
-import org.example.test
 import permutations
+import printTestSummary
+import readFile
+import test
 
 private fun runAmplifiers1(
     intcode: Intcode,
@@ -189,8 +186,8 @@ fun day7Tests(intcode: Intcode) {
 }
 
 fun main() {
-    day2Tests(day5Intcode)
-    day5Tests(day5Intcode)
-    day7Tests(day5Intcode)
+    day2Tests(mainIntcode)
+    day5Tests(mainIntcode)
+    day7Tests(mainIntcode)
     printTestSummary()
 }

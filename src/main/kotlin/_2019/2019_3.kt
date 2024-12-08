@@ -1,7 +1,11 @@
-package org.example._2019
+package _2019
 
-import org.example.*
-import org.example.Direction.*
+import Direction
+import Direction.*
+import Point
+import assertAndReturn
+import measure
+import readFile
 import kotlin.math.abs
 import kotlin.math.min
 

@@ -1,5 +1,3 @@
-package org.example
-
 enum class Direction {
     Left, Right, Up, Down, UpLeft, UpRight, DownLeft, DownRight
 }

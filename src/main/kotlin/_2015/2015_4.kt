@@ -1,8 +1,8 @@
-package org.example._2015
+package _2015
 
-import org.example.assertAndReturn
-import org.example.measure
-import org.example.readFile
+import assertAndReturn
+import measure
+import readFile
 import java.security.MessageDigest
 
 @OptIn(ExperimentalStdlibApi::class)

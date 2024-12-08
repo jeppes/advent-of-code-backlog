@@ -1,6 +1,3 @@
-import org.example.assertAndReturn
-import org.example.measure
-import org.example.readFile
 import kotlin.math.max
 
 private fun part1(input: String): Int {

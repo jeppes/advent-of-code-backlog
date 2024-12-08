@@ -1,5 +1,3 @@
-package org.example
-
 var failures = 0
 var passes = 0
 

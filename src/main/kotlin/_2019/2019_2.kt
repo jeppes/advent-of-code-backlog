@@ -1,51 +1,17 @@
-package org.example._2019
+package _2019
 
-import Continuation
-import Intcode
-import IntcodeState
-import org.example.*
-import parseIntcodeRegisters
-
-private val day2Intcode = object : Intcode {
-    override fun step(state: IntcodeState, input: Int?): Continuation {
-        val mutableRegisters = state.registers.toMutableList()
-
-        var instructionPointer = 0
-        while (mutableRegisters[instructionPointer] != 99) {
-            when (val instruction = mutableRegisters[instructionPointer]) {
-                1,
-                2 -> {
-                    val register1 = mutableRegisters[instructionPointer + 1]
-                    val register2 = mutableRegisters[instructionPointer + 2]
-                    val register3 = mutableRegisters[instructionPointer + 3]
-
-                    mutableRegisters[register3] =
-                        if (instruction == 1) mutableRegisters[register1] + mutableRegisters[register2]
-                        else mutableRegisters[register1] * mutableRegisters[register2]
-                }
-
-                else -> error("Invalid op code $instruction")
-            }
-
-            instructionPointer += 4
-        }
-
-        return Continuation.Halt(
-            state = IntcodeState(
-                instructionPointer = instructionPointer,
-                registers = mutableRegisters,
-                output = state.output,
-            )
-        )
-    }
-}
+import assertAndReturn
+import measure
+import printTestSummary
+import readFile
+import test
 
 private fun part1(input: String, noun: Int = 12, verb: Int = 2): Int {
     val state = parseIntcodeRegisters(input).toMutableList()
     state[1] = noun
     state[2] = verb
 
-    return day2Intcode.run(state, input = emptyList()).registers[0]
+    return mainIntcode.run(state, input = emptyList()).registers[0]
 }
 
 private fun part2(input: String): Int {
@@ -94,7 +60,7 @@ fun day2Tests(
 
 fun main() {
     val input = readFile("/2019_2.txt")
-    day2Tests(day2Intcode)
+    day2Tests(mainIntcode)
     printTestSummary()
 
     measure("Part 2") { assertAndReturn(part2(input), 3749) }

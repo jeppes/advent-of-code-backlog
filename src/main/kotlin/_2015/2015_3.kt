@@ -1,10 +1,10 @@
-package org.example._2015
+package _2015
 
-import org.example.Direction.*
-import org.example.Point
-import org.example.assertAndReturn
-import org.example.measure
-import org.example.readFile
+import Direction.*
+import Point
+import assertAndReturn
+import measure
+import readFile
 
 private fun part1(line: String): Int {
     var point = Point(0, 0)

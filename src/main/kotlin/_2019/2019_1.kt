@@ -1,8 +1,8 @@
-package org.example._2019
+package _2019
 
-import org.example.assertAndReturn
-import org.example.measure
-import org.example.readFile
+import assertAndReturn
+import measure
+import readFile
 import kotlin.math.floor
 import kotlin.math.max
 
